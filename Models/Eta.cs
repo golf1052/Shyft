@@ -8,6 +8,7 @@ namespace Shyft.Models
 {
     public class Eta
     {
+        [JsonProperty]
         [JsonConverter(typeof(RideTypeConverter))]
         public RideTypeEnum.RideTypes RideType { get; private set; }
 
