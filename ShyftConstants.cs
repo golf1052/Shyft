@@ -52,35 +52,35 @@ namespace Shyft
             }
         }
 
-        public static string RideTypeToString(RideTypeEnum.RideTypes rideType)
+        public static string RideTypeToString(LyftConstants.RideType rideType)
         {
-            if (rideType == RideTypeEnum.RideTypes.Lyft)
+            if (rideType == LyftConstants.RideType.Lyft)
             {
                 return "lyft";
             }
-            else if (rideType == RideTypeEnum.RideTypes.LyftLine)
+            else if (rideType == LyftConstants.RideType.LyftLine)
             {
                 return "lyft_line";
             }
-            else if (rideType == RideTypeEnum.RideTypes.LyftPlus)
+            else if (rideType == LyftConstants.RideType.LyftPlus)
             {
                 return "lyft_plus";
             }
-            else if (rideType == RideTypeEnum.RideTypes.LyftPremier)
+            else if (rideType == LyftConstants.RideType.LyftPremier)
             {
                 return "lyft_premier";
             }
-            else if (rideType == RideTypeEnum.RideTypes.LyftLux)
+            else if (rideType == LyftConstants.RideType.LyftLux)
             {
                 return "lyft_lux";
             }
-            else if (rideType == RideTypeEnum.RideTypes.LyftLuxSuv)
+            else if (rideType == LyftConstants.RideType.LyftLuxSuv)
             {
                 return "lyft_luxsuv";
             }
             else
             {
-                return "none";
+                return "other";
             }
         }
 
@@ -89,9 +89,9 @@ namespace Shyft
             return JObject.Parse(await httpResponseMessage.Content.ReadAsStringAsync());
         }
 
-        internal static Url SetRideType(this Url url, RideTypeEnum.RideTypes rideType)
+        internal static Url SetRideType(this Url url, LyftConstants.RideType rideType)
         {
-            if (rideType != RideTypeEnum.RideTypes.Unknown)
+            if (rideType != LyftConstants.RideType.Other)
             {
                 url.SetQueryParam("ride_type", ShyftConstants.RideTypeToString(rideType));
             }

@@ -18,37 +18,37 @@ namespace Shyft.Helpers
             string value = (string)reader.Value;
             if (value == "lyft")
             {
-                return RideTypeEnum.RideTypes.Lyft;
+                return LyftConstants.RideType.Lyft;
             }
             else if (value == "lyft_line")
             {
-                return RideTypeEnum.RideTypes.LyftLine;
+                return LyftConstants.RideType.LyftLine;
             }
             else if (value == "lyft_plus")
             {
-                return RideTypeEnum.RideTypes.LyftPlus;
+                return LyftConstants.RideType.LyftPlus;
             }
             else if (value == "lyft_premier")
             {
-                return RideTypeEnum.RideTypes.LyftPremier;
+                return LyftConstants.RideType.LyftPremier;
             }
             else if (value == "lyft_lux")
             {
-                return RideTypeEnum.RideTypes.LyftLux;
+                return LyftConstants.RideType.LyftLux;
             }
             else if (value == "lyft_luxsuv")
             {
-                return RideTypeEnum.RideTypes.LyftLuxSuv;
+                return LyftConstants.RideType.LyftLuxSuv;
             }
             else
             {
-                return RideTypeEnum.RideTypes.Unknown;
+                return LyftConstants.RideType.Other;
             }
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            RideTypeEnum.RideTypes rideType = (RideTypeEnum.RideTypes)value;
+            LyftConstants.RideType rideType = (LyftConstants.RideType)value;
             writer.WriteValue(ShyftConstants.RideTypeToString(rideType));
         }
     }

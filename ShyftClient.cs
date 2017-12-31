@@ -116,12 +116,109 @@ namespace Shyft
             await RefreshAccessToken();
         }
 
-        public async Task<List<RideType>> RetrieveRideTypes(double lat, double lng)
+        public async Task<RideRequest> RequestRide(double originLat, double originLng, double destinationLat, double destinationLng, LyftConstants.RideType rideType,
+            string originAddress = null, string destinationAddress = null, string costToken = null)
         {
-            return await RetrieveRideTypes(lat, lng, RideTypeEnum.RideTypes.Unknown);
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("rides");
+            JObject data = new JObject();
+            data["origin"] = CreateLocation(originLat, originLng, originAddress);
+            data["destination"] = CreateLocation(destinationLat, destinationLng, destinationAddress);
+            data["ride_type"] = ShyftConstants.RideTypeToString(rideType);
+            if (!string.IsNullOrEmpty(costToken))
+            {
+                data["cost_token"] = costToken;
+            }
+            return await PostLyft<RideRequest>(url, data);
         }
 
-        public async Task<List<RideType>> RetrieveRideTypes(double lat, double lng, RideTypeEnum.RideTypes rideType)
+        private JObject CreateLocation(double lat, double lng, string address = null)
+        {
+            JObject o = new JObject();
+            o["lat"] = lat;
+            o["lng"] = lng;
+            if (!string.IsNullOrEmpty(address))
+            {
+                o["address"] = address;
+            }
+            return o;
+        }
+
+        public async Task<RideDetail> RetrieveRideDetails(string rideId)
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId);
+            return await PostLyft<RideDetail>(url, null);
+        }
+
+        public async Task<Location> ChangeDestination(string rideId, double lat, double lng, string address = null)
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId, "destination");
+            JObject data = CreateLocation(lat, lng, address);
+            return await PutLyft<Location>(url, data);
+        }
+
+        public async Task RateRide(string rideId, int rating, int tipAmount, string tipCurrency)
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId, "rating");
+            JObject data = JObject.FromObject(new
+            {
+                rating = rating,
+                tip = new
+                {
+                    amount = tipAmount,
+                    currency = tipCurrency
+                }
+            });
+            //JObject data = new JObject();
+            //data["rating"] = rating;
+            //JObject tip = new JObject();
+            //tip["amount"] = tipAmount;
+            //tip["currency"] = tipCurrency;
+            //data["tip"] = tip;
+            await PutLyft(url, data);
+        }
+
+        public async Task<RideReceipt> RetrieveReceipt(string rideId)
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId, "receipt");
+            return await GetLyft<RideReceipt>(url);
+        }
+
+        public async Task CancelRide(string rideId, string cancelConfirmationToken = null)
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId, "cancel");
+            JObject data = null;
+            if (cancelConfirmationToken != null)
+            {
+                data = JObject.FromObject(new
+                {
+                    cancel_confirmation_token = cancelConfirmationToken
+                });
+            }
+            try
+            {
+                await PostLyft(url, data);
+            }
+            catch (ShyftException ex)
+            {
+                if (ex.ResponseMessage.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    var cancellationCostError = JsonConvert.DeserializeObject<CancellationCostError>(await ex.ResponseMessage.Content.ReadAsStringAsync(), jsonSettings);
+                    throw new LyftException<CancellationCostError>(cancellationCostError);
+                }
+                else
+                {
+                    var error = JsonConvert.DeserializeObject<ApiError>(await ex.ResponseMessage.Content.ReadAsStringAsync(), jsonSettings);
+                    throw new LyftException<ApiError>(error);
+                }
+            }
+        }
+
+        public async Task<List<RideType>> RetrieveRideTypes(double lat, double lng)
+        {
+            return await RetrieveRideTypes(lat, lng, LyftConstants.RideType.Other);
+        }
+
+        public async Task<List<RideType>> RetrieveRideTypes(double lat, double lng, LyftConstants.RideType rideType)
         {
             Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("ridetypes")
                 .SetQueryParams(new
@@ -135,10 +232,10 @@ namespace Shyft
 
         public async Task<List<Eta>> RetrieveDriverEta(double lat, double lng, double? destinationLat = null, double? destinationLng = null)
         {
-            return await RetrieveDriverEta(lat, lng, destinationLat, destinationLng, RideTypeEnum.RideTypes.Unknown);
+            return await RetrieveDriverEta(lat, lng, destinationLat, destinationLng, LyftConstants.RideType.Other);
         }
 
-        public async Task<List<Eta>> RetrieveDriverEta(double lat, double lng, double? destinationLat, double? destinationLng, RideTypeEnum.RideTypes rideType)
+        public async Task<List<Eta>> RetrieveDriverEta(double lat, double lng, double? destinationLat, double? destinationLng, LyftConstants.RideType rideType)
         {
             Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("eta")
                 .SetQueryParams(new
@@ -152,10 +249,10 @@ namespace Shyft
 
         public async Task<List<CostEstimate>> RetrieveRideEstimates(double startLat, double startLng, double? endLat = null, double? endLng = null)
         {
-            return await RetrieveRideEstimates(startLat, startLng, endLat, endLng, RideTypeEnum.RideTypes.Unknown);
+            return await RetrieveRideEstimates(startLat, startLng, endLat, endLng, LyftConstants.RideType.Other);
         }
 
-        public async Task<List<CostEstimate>> RetrieveRideEstimates(double startLat, double startLng, double? endLat, double? endLng, RideTypeEnum.RideTypes rideType)
+        public async Task<List<CostEstimate>> RetrieveRideEstimates(double startLat, double startLng, double? endLat, double? endLng, LyftConstants.RideType rideType)
         {
             Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("cost")
                 .SetQueryParams(new
@@ -186,6 +283,46 @@ namespace Shyft
             await CheckAccess();
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
             return JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
+        }
+
+        private async Task<T> PostLyft<T>(string url, JObject data)
+        {
+            await CheckAccess();
+            string content = string.Empty;
+            if (data != null)
+            {
+                content = data.ToString();
+            }
+            HttpResponseMessage responseMessage = await httpClient.PostAsync(url, new StringContent(content, Encoding.UTF8, "application/json"));
+            return JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
+        }
+
+        private async Task PostLyft(string url, JObject data)
+        {
+            await CheckAccess();
+            string content = string.Empty;
+            if (data != null)
+            {
+                content = data.ToString();
+            }
+            HttpResponseMessage responseMessage = await httpClient.PostAsync(url, new StringContent(content, Encoding.UTF8, "application/json"));
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                throw new ShyftException(responseMessage);
+            }
+        }
+
+        private async Task<T> PutLyft<T>(string url, JObject data)
+        {
+            await CheckAccess();
+            HttpResponseMessage responseMessage = await httpClient.PutAsync(url, new StringContent(data.ToString(), Encoding.UTF8, "application/json"));
+            return JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
+        }
+
+        private async Task PutLyft(string url, JObject data)
+        {
+            await CheckAccess();
+            HttpResponseMessage responseMessage = await httpClient.PutAsync(url, new StringContent(data.ToString(), Encoding.UTF8, "application/json"));
         }
 
         private async Task<JObject> PostLyftAuth(string url, JObject data)

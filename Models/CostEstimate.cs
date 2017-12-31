@@ -10,7 +10,7 @@ namespace Shyft.Models
     {
         [JsonProperty]
         [JsonConverter(typeof(RideTypeConverter))]
-        public RideTypeEnum.RideTypes RideType { get; private set; }
+        public LyftConstants.RideType RideType { get; private set; }
 
         [JsonProperty]
         public string DisplayName { get; private set; }
