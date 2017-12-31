@@ -168,12 +168,6 @@ namespace Shyft
                     currency = tipCurrency
                 }
             });
-            //JObject data = new JObject();
-            //data["rating"] = rating;
-            //JObject tip = new JObject();
-            //tip["amount"] = tipAmount;
-            //tip["currency"] = tipCurrency;
-            //data["tip"] = tip;
             await PutLyft(url, data);
         }
 
@@ -227,7 +221,7 @@ namespace Shyft
                     lng = lng
                 })
                 .SetRideType(rideType);
-            return (await GetLyft<RideTypesObject>(url)).RideTypes;
+            return (await GetLyft<RideTypesResponse>(url)).RideTypes;
         }
 
         public async Task<List<Eta>> RetrieveDriverEta(double lat, double lng, double? destinationLat = null, double? destinationLng = null)
@@ -244,7 +238,7 @@ namespace Shyft
                     lng = lng
                 })
                 .SetRideType(rideType);
-            return (await GetLyft<EtaEstimatesObject>(url)).EtaEstimates;
+            return (await GetLyft<EtaEstimateResponse>(url)).EtaEstimates;
         }
 
         public async Task<List<CostEstimate>> RetrieveRideEstimates(double startLat, double startLng, double? endLat = null, double? endLng = null)
@@ -263,7 +257,7 @@ namespace Shyft
                     end_lng = endLng
                 })
                 .SetRideType(rideType);
-            return (await GetLyft<CostEstimatesObject>(url)).CostEstimates;
+            return (await GetLyft<CostEstimateResponse>(url)).CostEstimates;
         }
 
         public async Task<List<NearbyDriversByRideType>> RetrieveNearbyDrivers(double lat, double lng)
@@ -274,8 +268,33 @@ namespace Shyft
                     lat = lat,
                     lng = lng
                 });
-            NearbyDriversObject nearbyDriversObject = await GetLyft<NearbyDriversObject>(url);
+            NearbyDriversResponse nearbyDriversObject = await GetLyft<NearbyDriversResponse>(url);
             return nearbyDriversObject.NearbyDrivers;
+        }
+
+        public async Task<List<RideDetail>> RetrieveRideHistory(DateTimeOffset? startTime = null, DateTimeOffset? endTime = null, int limit = 10)
+        {
+            if (!startTime.HasValue)
+            {
+                startTime = new DateTimeOffset(new DateTime(2015, 1, 1), TimeSpan.Zero);
+            }
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("rides")
+                .SetQueryParams(new
+                {
+                    start_time = startTime.Value.ToUniversalTime().ToString(ShyftConstants.Iso8601Utc),
+                    limit = limit
+                });
+            if (endTime.HasValue)
+            {
+                url.SetQueryParam("end_time", endTime.Value.ToUniversalTime().ToString(ShyftConstants.Iso8601Utc));
+            }
+            return (await GetLyft<RidesResponse>(url)).RideHistory;
+        }
+
+        public async Task<Profile> RetrieveProfile()
+        {
+            Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegment("profile");
+            return await GetLyft<Profile>(url);
         }
 
         private async Task<T> GetLyft<T>(string url)

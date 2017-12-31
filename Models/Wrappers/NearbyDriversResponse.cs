@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 
 namespace Shyft.Models.Wrappers
 {
-    internal struct RideTypesObject
+    internal struct NearbyDriversResponse
     {
         [JsonProperty]
-        public List<RideType> RideTypes { get; private set; }
+        public List<NearbyDriversByRideType> NearbyDrivers { get; private set; }
     }
 }

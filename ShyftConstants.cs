@@ -15,6 +15,8 @@ namespace Shyft
 
         public const string BaseV1Url = "https://api.lyft.com/v1/";
 
+        public const string Iso8601Utc = "yyyy-MM-ddTHH:mm:ssZ";
+
         public enum AuthScopes
         {
             Public,
