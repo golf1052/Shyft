@@ -8,6 +8,6 @@ namespace Shyft.Models
     public class CurrentRideLocation : LatLng
     {
         [JsonProperty]
-        public double Bearing { get; private set; }
+        public double? Bearing { get; private set; }
     }
 }

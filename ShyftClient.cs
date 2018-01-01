@@ -10,6 +10,7 @@ using Shyft.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Shyft.Models.Wrappers;
+using System.Diagnostics;
 
 namespace Shyft
 {
@@ -53,16 +54,7 @@ namespace Shyft
 
         public string GetAuthUrl(List<ShyftConstants.AuthScopes> scopes, string state = null)
         {
-            string scopesString = null;
-            if (scopes != null && scopes.Count > 0)
-            {
-                List<string> scopesList = new List<string>();
-                foreach (var scope in scopes)
-                {
-                    scopesList.Add(ShyftConstants.AuthScopeToString(scope));
-                }
-                scopesString = string.Join(" ", scopesList);
-            }
+            string scopesString = GetScopesString(scopes);
 
             Url url = new Url(ShyftConstants.BaseUrl).AppendPathSegments("oauth", "authorize")
                 .SetQueryParams(new
@@ -76,16 +68,44 @@ namespace Shyft
             return url;
         }
 
+        private string GetScopesString(List<ShyftConstants.AuthScopes> scopes)
+        {
+            string scopesString = null;
+            if (scopes != null && scopes.Count > 0)
+            {
+                List<string> scopesList = new List<string>();
+                foreach (var scope in scopes)
+                {
+                    scopesList.Add(ShyftConstants.AuthScopeToString(scope));
+                }
+                scopesString = string.Join(" ", scopesList);
+            }
+            return scopesString;
+        }
+
         public async Task Auth(string code = null)
+        {
+            await Auth(code, null);
+        }
+
+        protected async Task Auth(string code = null, List<ShyftConstants.AuthScopes> scopes = null)
         {
             JObject authData;
             if (string.IsNullOrEmpty(code))
             {
                 authData = JObject.FromObject(new
                 {
-                    grant_type = "client_credentials",
-                    scopes = "public"
+                    grant_type = "client_credentials"
                 });
+
+                if (scopes == null || scopes.Count == 0)
+                {
+                    authData["scope"] = "public";
+                }
+                else
+                {
+                    authData["scope"] = GetScopesString(scopes);
+                }
                 AuthType = AuthTypes.TwoLeg;
             }
             else
@@ -146,7 +166,7 @@ namespace Shyft
         public async Task<RideDetail> RetrieveRideDetails(string rideId)
         {
             Url url = new Url(ShyftConstants.BaseV1Url).AppendPathSegments("rides", rideId);
-            return await PostLyft<RideDetail>(url, null);
+            return await GetLyft<RideDetail>(url);
         }
 
         public async Task<Location> ChangeDestination(string rideId, double lat, double lng, string address = null)
@@ -301,7 +321,17 @@ namespace Shyft
         {
             await CheckAccess();
             HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
-            return JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
+            JObject responseObject = JObject.Parse(await responseMessage.Content.ReadAsStringAsync());
+            T o = default(T);
+            try
+            {
+                o = JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("");
+            }
+            return o;
         }
 
         private async Task<T> PostLyft<T>(string url, JObject data)
@@ -331,14 +361,14 @@ namespace Shyft
             }
         }
 
-        private async Task<T> PutLyft<T>(string url, JObject data)
+        protected async Task<T> PutLyft<T>(string url, JObject data)
         {
             await CheckAccess();
             HttpResponseMessage responseMessage = await httpClient.PutAsync(url, new StringContent(data.ToString(), Encoding.UTF8, "application/json"));
             return JsonConvert.DeserializeObject<T>(await responseMessage.Content.ReadAsStringAsync(), jsonSettings);
         }
 
-        private async Task PutLyft(string url, JObject data)
+        protected async Task PutLyft(string url, JObject data)
         {
             await CheckAccess();
             HttpResponseMessage responseMessage = await httpClient.PutAsync(url, new StringContent(data.ToString(), Encoding.UTF8, "application/json"));

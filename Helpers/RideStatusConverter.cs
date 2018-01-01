@@ -30,7 +30,8 @@ namespace Shyft.Helpers
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            LyftConstants.RideStatus rideStatus = (LyftConstants.RideStatus)value;
+            writer.WriteValue(ShyftConstants.RideStatusToString(rideStatus));
         }
     }
 }

@@ -15,6 +15,8 @@ namespace Shyft
 
         public const string BaseV1Url = "https://api.lyft.com/v1/";
 
+        public const string BaseV1SandboxUrl = "https://api.lyft.com/v1/sandbox/";
+
         public const string Iso8601Utc = "yyyy-MM-ddTHH:mm:ssZ";
 
         public enum AuthScopes
@@ -98,6 +100,42 @@ namespace Shyft
                 url.SetQueryParam("ride_type", ShyftConstants.RideTypeToString(rideType));
             }
             return url;
+        }
+
+        public static string RideStatusToString(LyftConstants.RideStatus rideStatus)
+        {
+            if (rideStatus == LyftConstants.RideStatus.Pending)
+            {
+                return "pending";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.Accepted)
+            {
+                return "accepted";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.Arrived)
+            {
+                return "arrived";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.PickedUp)
+            {
+                return "pickedUp";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.DroppedOff)
+            {
+                return "droppedOff";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.Canceled)
+            {
+                return "canceled";
+            }
+            else if (rideStatus == LyftConstants.RideStatus.Scheduled)
+            {
+                return "scheduled";
+            }
+            else
+            {
+                return "unknown";
+            }
         }
     }
 }
