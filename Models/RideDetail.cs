@@ -91,5 +91,8 @@ namespace Shyft.Models
 
         [JsonProperty]
         public string BeaconColor { get; private set; }
+
+        [JsonProperty]
+        public List<Charge> Charges { get; private set; }
     }
 }
